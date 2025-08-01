@@ -1,0 +1,17 @@
+{
+  "name": "week11",
+  "version": "1.0.0",
+  "description": "A simple demonstration of SQL injection and prevention techniques",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tri Dang",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "mysql2": "^3.11.0",
+    "nodemon": "^3.0.1"
+  }
+}
