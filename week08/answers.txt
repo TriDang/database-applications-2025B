@@ -1,0 +1,43 @@
+// Exercise 2
+
+// get all book documents
+db.books.find();
+
+// get all book title, ISBN, and number of pages 
+db.books.find({}, { title: 1, isbn: 1, pageCount: 1, _id: 0 });
+
+// get all books whose title is "Test Driven"
+db.books.find({ title: "Test Driven" });
+
+// get all books that have more than 500 pages
+db.books.find({ pageCount: { $gt: 500 } });
+
+// get all books that have more than 500 pages and less than 600 pages
+db.books.find({ pageCount: { $gt: 500, $lt: 600 } });
+
+// get all books that have more than 1000 pages OR (less than 200 pages but still > 0)
+db.books.find({
+  $or: [{ pageCount: { $gt: 1000 } }, { pageCount: { $lt: 200, $gt: 0 } }],
+});
+
+// get all books whose title contains the word "Android"
+db.books.find({ title: /Android/ });
+
+// get all books whose title starts/ends with "Java"
+db.books.find({ title: { $regex: /^Java/ } });
+db.books.find({ title: { $regex: /Java$/ } });
+
+// get all books written by "Robi Sen"
+db.books.find({ authors: { $all: ["Robi Sen"] } });
+db.books.find({ authors: "Robi Sen" });
+
+// count how many books belong to the category "Java"
+db.books.find({ categories: "Java" }).count();
+
+// Exercise 3
+
+db.books.insertOne({ title: "Best Book ever", pageCount: 1001, price: 99.9 });
+
+db.books.updateMany({ price: { $gt: 1 } }, { $set: { price: 1.1 } });
+
+db.books.deleteMany({ pageCount: 0 });
