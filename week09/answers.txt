@@ -1,0 +1,89 @@
+// Exercise 1
+
+db.students.find({ "scores.score" : {$gt: 99} });
+
+db.students.find({ scores: { $elemMatch: {score: {$gt: 99}, type: "homework" }}});
+
+db.students.find({ "scores.score": { $not: { $lte: 90 }}});
+
+db.students.updateOne({"scores.score": {$gte: 80}}, {$set: {"scores.$.grade":"excellent"}})
+
+db.students.updateOne({_id: 0}, {$push: {scores: {score: 100, type: "overall"}}})
+
+db.students.updateOne({_id: 0}, {$pop: {scores: 1}})
+
+// Exercise 2
+
+db.products.aggregate({
+  $lookup: {
+    localField: "_id",
+    from: "components",
+    foreignField: "for",
+    as: "productComponents" 
+  }
+});
+
+db.products.aggregate([
+  {
+    $lookup: {
+      localField: "_id",
+      from: "components",
+      foreignField: "for",
+      as: "productComponents" 
+    }
+  },
+  {
+    $unwind: "$productComponents"
+  },
+  {
+    $group: {
+      _id: { product_id: "$_id", name: "$name" },
+      totalPrice: { $sum: "$productComponents.price" }
+    }
+  },
+  {
+    $addFields: {
+      product_id: "$_id.product_id",
+      name: "$_id.name"
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      product_id: 1,
+      name: 1,
+      totalPrice: 1
+    }
+  },
+  {
+    $sort: {totalPrice: -1 }
+  }
+]);
+
+db.students.aggregate([
+  {
+    $addFields: {
+      total_score: { $sum: "$scores.score" }
+    }
+  },
+  {
+    $match: {
+      total_score: { $gte: 200 }
+    }
+  },
+  {
+    $sort: {
+      total_score: -1
+    }
+  },
+  {
+    $project: {
+      _id: 1,
+      name: 1,
+      total_score: 1
+    }
+  },
+  {
+    $limit: 5
+  }
+]);
