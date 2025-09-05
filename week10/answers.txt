@@ -1,0 +1,42 @@
+Exercise 1
+- Query
+db.books.find({ title: /^Java/ })
+
+- Index
+db.books.createIndex({ title: 1 })
+
+- Analyze (before and after)
+db.books.find({ title: /^Java/ }).explain("executionStats")
+
+- Pay attention to: stage (COLLSCAN or IXSCAN), totalKeysExamined, totalDocsExamined
+- See what happens when you change the condition to { title: /Java/ }
+
+Exercise 2
+- Query
+db.books.find({ title: /^Java/, pageCount: { $gte: 500} })
+
+- Index
+Two separate indexes:
+db.books.createIndex({ title: 1 })
+db.books.createIndex({ pageCount: 1 })
+
+OR one compound index:
+db.books.createIndex({ title: 1, pageCount: 1 })
+
+- Analyze the differences between the two
+
+Exercise 3
+- Query
+db.books.find({ status: "PUBLISH" }, { _id: 0, title: 1 })
+
+- Index
+db.books.createIndex({ status: 1, title: 1 })
+
+- Observe totalKeysExamined and totalDocsExamined values
+
+Exercise 4
+- Query
+db.books.find({ status: "PUBLISH" }).sort({ publishedDate: 1 })
+
+- Index
+db.books.createIndex({ status: 1, publishedDate: 1 })
