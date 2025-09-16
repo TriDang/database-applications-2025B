@@ -1,0 +1,165 @@
+// Problem 1
+
+// Q1
+db.products.find(
+  { price: { $gt: 20 } }
+);
+
+// Q2
+db.customers.find(
+  { phones: { $elemMatch: { type: "home", number: "0280000002" } } }
+);
+
+// Q3
+db.customers.aggregate([
+  {
+    $lookup: {
+      from: "products",
+      localField: "purchasedProducts",
+      foreignField: "_id",
+      as: "productsBought"
+    }
+  }
+]);
+
+// Q4
+db.customers.aggregate([
+  {
+    $lookup: {
+      from: "products",
+      localField: "purchasedProducts",
+      foreignField: "_id",
+      as: "productsBought"
+    }
+  },
+  {
+    $addFields: {
+      avgPrice: { $avg: "$productsBought.price" }
+    }
+  },
+  {
+    $project: {
+      _id: 1,
+      name: 1,
+      avgPrice: 1
+    }
+  },
+  { $sort: { avgPrice: -1 } }
+]);
+
+
+// Problem 2
+// Task 1
+db.customers.find(
+  { email: /a/ }
+);
+
+db.customers.createIndex({ email: 1 });
+
+// Task 2
+db.products.find(
+  { category: "database" }
+).sort({ price: 1 });
+
+db.products.createIndex({ category: 1, price: 1 });
+
+// Task 3
+db.products.find(
+  { category: "database", price: { $gte: 10, $lte: 30 } },
+  { _id: 0, name: 1, price: 1 }
+);
+
+db.products.createIndex({ category: 1, price: 1, name: 1 });
+
+
+// Problem 3
+=== CREATE FUNCTION ===
+
+delimiter $$
+
+create function top_team()
+  returns int not deterministic
+  reads sql data
+begin
+  declare top_id int;
+  select id into top_id
+  from teams
+  order by points desc
+  limit 1;
+  
+  return top_id;
+end $$
+
+delimiter ;
+
+=== CREATE TRIGGER ===
+
+delimiter $$
+
+create trigger new_match_update_point
+  after insert on matches
+  for each row
+outer_most: begin
+  if new.home_score > new.away_score then
+    update teams set points = points + 3
+    where id = new.home_team;
+    leave outer_most;
+  end if;
+  if new.home_score < new.away_score then
+    update teams set points = points + 3
+    where id = new.away_team;
+    leave outer_most;
+  end if;
+  update teams set points = points + 1
+  where id = new.home_team OR id = new.away_team;
+end $$
+
+delimiter ;
+
+================================
+
+Problem 4
+
+=== CREATE PROCEDURE ===
+
+delimiter $$
+
+create procedure sp_score_a_goal(in param_match_id int, in param_team_id int, in param_scorer_name varchar(50))
+begin
+  declare found int;
+  start transaction;
+  
+  insert into scores(match_id, team_id, scorer_name)
+  values(param_match_id, param_team_id, param_scorer_name);
+  
+  select count(*) into found
+  from matches
+  where id = param_match_id and (home_team = param_team_id or away_team = param_team_id);
+  
+  if found = 0 then
+    rollback;
+  else
+    update matches set home_score = home_score + 1
+    where id = param_match_id and home_team = param_team_id;
+
+    update matches set away_score = away_score + 1
+    where id = param_match_id and away_team = param_team_id;
+  
+    commit;
+  end if;
+end $$
+
+delimiter ;
+
+=== CONCURRENCY ISSUE ===
+
+To demonstrate the mentioned concurrency issue, you can follow the below steps:
+- Open two command-line windows and connect to the required database.
+- On both windows, set the isolation level to read uncommitted.
+- On window 1, start a new transaction and insert a record into the "scores" table with your name.
+- On window 2, execute a select statement to verify that you can see your name as a scorer (this is dirty read).
+- On window 1, roll back the transaction (this happen when the pair <match_id and team_id> is not valid).
+- On window 2, execute the same select statement to verify that your name has disappeared.
+
+You can set the transaction isolation level to higher level, for exapmple READ COMMITTED to fix the above issue.
+
