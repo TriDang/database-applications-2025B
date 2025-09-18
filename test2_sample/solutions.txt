@@ -161,5 +161,5 @@ To demonstrate the mentioned concurrency issue, you can follow the below steps:
 - On window 1, roll back the transaction (this happen when the pair <match_id and team_id> is not valid).
 - On window 2, execute the same select statement to verify that your name has disappeared.
 
-You can set the transaction isolation level to higher level, for exapmple READ COMMITTED to fix the above issue.
+You can set the transaction isolation level to higher level, for example, READ COMMITTED to fix the above issue.
 
